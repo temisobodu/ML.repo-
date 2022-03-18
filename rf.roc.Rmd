@@ -1,0 +1,41 @@
+library(pROC)
+library(randomForest)
+set.seed(420)
+
+num.samples = 100
+
+weight = sort(rnorm(num.samples, mean = 172, sd= 79))
+weight
+
+obese = ifelse(test = (runif(n = num.samples) < rank(weight)/100),yes = 1,no = 0)
+obese
+plot (x=weight, y = obese)
+glm.fit = glm(obese ~ weight , family = binomial)
+lines(weight, glm.fit$fitted.values)
+roc(obese, glm.fit$fitted.values, plot = T)
+
+par(pty = "s")
+roc(obese, glm.fit$fitted.values, plot = T)
+roc(obese, glm.fit$fitted.values, plot = T, legacy.axes = T)
+roc(obese, glm.fit$fitted.values, plot = T, legacy.axes = T, percent = T,
+    ylab = "True +ve Percentage", xlab = "False +ve Percentage", col = "blue",
+    lwd = 3)
+roc.info =roc(obese, glm.fit$fitted.values, plot = T, legacy.axes = T)
+
+roc.df = data.frame(tpp = roc.info$sensitivities*100, 
+fpp = (1- roc.info$specificities)*100,thresolds = roc.info$thresholds) 
+
+head(roc.df)
+tail(roc.df)
+
+roc.df[roc.df$tpp > 60 & roc.df$tpp< 80,]
+roc(obese, glm.fit$fitted.values, plot = T, legacy.axes = T, percent = T,
+    ylab = "True +ve Percentage", xlab = "False +ve Percentage", col = "blue",
+    lwd = 3, print.auc = T)
+
+rf.model = randomForest(factor(obese) ~ weight)
+rf.model
+
+plot(rf.model)
+plot.roc(obese, rf.model$votes[,1], percent = T,print.auc =T,
+         col = "forestgreen", add = T, print.auc.y =40)
